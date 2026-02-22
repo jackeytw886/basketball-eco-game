@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏀 環保投籃機 - 垃圾分類大挑戰</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Chakra+Petch:wght@600;700&display=swap');
+
+:root {
+  --bg:      #0a1612;
+  --card:    #152820;
+  --border:  #2d4a3e;
+  --accent:  #00ff88;
+  --accent2: #4cc9f0;
+  --gold:    #f9c74f;
+  --text:    #e8f7ee;
+  --dim:     #5a7a67;
+  --paper:   #4488ff;
+  --plastic: #ffdd00;
+  --glass:   #00ddff;
+  --organic: #44ff88;
+  --danger:  #ff4455;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans TC', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* ─── Header ─── */
+.header {
+  text-align: center;
+  padding: 18px 20px 12px;
+  background: linear-gradient(to bottom, #050a08, var(--bg));
+  border-bottom: 2px solid var(--border);
+  position: relative;
+}
+.header h1 {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  background: linear-gradient(135deg, var(--accent), var(--gold), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: glow 2s ease-in-out infinite;
+}
+@keyframes glow {
+  0%,100% { filter: brightness(1); }
+  50%      { filter: brightness(1.35); }
+}
+.header p { color: var(--dim); font-size: 0.85rem; margin-top: 4px; }
+
+/* ─── Stats Bar ─── */
+.stats-bar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 15px;
+  background: rgba(0,0,0,0.35);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.stat-box {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 16px;
+  text-align: center;
+  min-width: 85px;
+}
+.stat-box .lbl { font-size: 0.72rem; color: var(--dim); letter-spacing: 1px; }
+.stat-box .val {
+  font-family: 'Chakra Petch', monospace;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+}
+.stat-box.s-timer .val { color: var(--gold); }
+.stat-box.s-streak .val { color: #ff9900; }
+.stat-box.s-level .val { color: var(--accent2); }
+
+.progress-bar { height: 4px; background: #1a2a22; border-radius: 2px; margin-top: 4px; overflow:hidden; }
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.9s linear, background 0.5s;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+}
+
+/* ─── Game Area ─── */
+.game-wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+
+/* Ball Stage */
+.ball-stage {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.trash-ball {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  position: relative;
+  border: 3px solid transparent;
+  animation: ballPulse 1.2s ease-in-out infinite;
+  cursor: default;
+}
+@keyframes ballPulse {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.07); }
+}
+.ball-lbl { font-size: 0.65rem; font-weight: bold; margin-top: 2px; line-height: 1; }
+.throw-anim { animation: throwBall 0.45s ease-in forwards !important; }
+@keyframes throwBall {
+  0%   { transform: scale(1); opacity: 1; }
+  40%  { transform: scale(1.2) translateY(-25px); opacity: 0.9; }
+  100% { transform: scale(0) translateY(-90px); opacity: 0; }
+}
+
+/* Instruction */
+.instruction {
+  text-align: center;
+  color: var(--accent2);
+  font-size: 0.95rem;
+  font-weight: bold;
+  margin: 6px 0 10px;
+  min-height: 24px;
+}
+.instruction span {
+  display: inline-block;
+  animation: bob 1.2s ease-in-out infinite;
+}
+@keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+
+/* ─── Bins Row ─── */
+.bins-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 4px;
+}
+.bin-card {
+  background: var(--card);
+  border: 3px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+}
+.bin-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,255,136,0.25); }
+.bin-card.correct {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 35px rgba(0,255,136,0.7) !important;
+  animation: correctFlash 0.45s ease;
+}
+.bin-card.wrong {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 35px rgba(255,68,85,0.7) !important;
+  animation: wrongShake 0.45s ease;
+}
+@keyframes correctFlash { 0%{transform:scale(1)} 40%{transform:scale(1.08)} 100%{transform:scale(1)} }
+@keyframes wrongShake   { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+
+.bin-header {
+  padding: 7px 10px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.88rem;
+  background: rgba(0,0,0,0.3);
+  letter-spacing: 1px;
+}
+.bin-led-area {
+  padding: 10px;
+  background: #000;
+  display: flex;
+  justify-content: center;
+}
+.led-matrix {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 7px;
+  background: #030303;
+  border-radius: 6px;
+}
+.led {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #141414;
+  border: 1px solid #222;
+  transition: background-color 0.1s, box-shadow 0.1s;
+}
+.bin-footer {
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--dim);
+  border-top: 1px solid var(--border);
+  line-height: 1.4;
+}
+.key-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: 'Chakra Petch', monospace;
+  font-size: 0.75rem;
+  color: var(--gold);
+}
+
+/* ─── Eco Fact ─── */
+.eco-fact {
+  margin-top: 14px;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-left: 5px solid var(--accent);
+  border-radius: 12px;
+  padding: 12px 16px;
+  animation: factSlide 0.35s ease-out;
+  white-space: pre-line;
+}
+@keyframes factSlide {
+  from { opacity:0; transform:translateX(-15px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+.fact-tag { color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; }
+.fact-body { color: var(--text); font-size: 0.88rem; line-height: 1.5; }
+
+/* ─── Overlay ─── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.ovl-box {
+  background: var(--card);
+  border: 3px solid var(--accent);
+  border-radius: 20px;
+  padding: 36px 30px;
+  text-align: center;
+  max-width: 400px;
+  width: 92%;
+  box-shadow: 0 0 60px rgba(0,255,136,0.4);
+}
+.ovl-box h2 {
+  font-size: 2rem;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.ovl-box p { color: var(--dim); line-height: 1.65; margin-bottom: 8px; font-size: 0.92rem; }
+.ovl-cat-row { display:flex; justify-content:center; gap:12px; margin:14px 0; font-size:1.8rem; }
+.start-btn {
+  background: linear-gradient(135deg, var(--accent), #00cc66);
+  color: #003311;
+  border: none;
+  padding: 14px 38px;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: all 0.25s;
+  margin-top: 10px;
+}
+.start-btn:hover { transform: scale(1.06); box-shadow: 0 8px 22px rgba(0,255,136,0.5); }
+
+/* ─── Level Up Banner ─── */
+.level-banner {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: linear-gradient(135deg, var(--gold), #ff9900);
+  color: #000;
+  padding: 18px 40px;
+  border-radius: 15px;
+  font-size: 1.8rem;
+  font-weight: 900;
+  font-family: 'Chakra Petch', sans-serif;
+  z-index: 500;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 0 60px rgba(249,199,79,0.9);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.level-banner.show { transform: translate(-50%, -50%) scale(1); }
+
+/* ─── Sound Toggle ─── */
+.sound-btn {
+  position: fixed;
+  top: 14px; right: 14px;
+  background: var(--card);
+  border: 2px solid var(--border);
+  color: var(--text);
+  padding: 7px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  z-index: 200;
+  transition: border-color 0.2s;
+}
+.sound-btn:hover { border-color: var(--accent); }
+
+/* ─── Particle Canvas ─── */
+#pCanvas { position:fixed; inset:0; pointer-events:none; z-index:50; }
+
+/* ─── Score Popup ─── */
+.score-popup {
+  position: fixed;
+  font-family: 'Chakra Petch', monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  pointer-events: none;
+  z-index: 300;
+  animation: scoreFloat 1s ease-out forwards;
+}
+@keyframes scoreFloat {
+  0%   { opacity:1; transform:translateY(0) scale(1); }
+  100% { opacity:0; transform:translateY(-60px) scale(0.8); }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 700px) {
+  .bins-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .ball-stage { min-height: 100px; }
+  .trash-ball { width: 80px; height: 80px; font-size: 2rem; }
+  .led { width: 10px; height: 10px; }
+  .stat-box .val { font-size: 1.3rem; }
+}
+@media (max-width: 380px) {
+  .led { width: 8px; height: 8px; }
+  .led-matrix { gap: 1px; padding: 5px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="pCanvas"></canvas>
+<button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
+
+<!-- Header -->
+<div class="header">
+  <h1>🏀 環保投籃機</h1>
+  <p>8×8 LED 矩陣 × 垃圾分類大挑戰 × 互動音效</p>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+  <div class="stat-box">
+    <div class="lbl">分數</div>
+    <div class="val" id="scoreVal">0</div>
+  </div>
+  <div class="stat-box s-timer">
+    <div class="lbl">倒數</div>
+    <div class="val" id="timerVal">60</div>
+    <div class="progress-bar"><div class="progress-fill" id="timerBar" style="width:100%"></div></div>
+  </div>
+  <div class="stat-box s-streak">
+    <div class="lbl">連擊</div>
+    <div class="val" id="streakVal">0×</div>
+  </div>
+  <div class="stat-box s-level">
+    <div class="lbl">關卡</div>
+    <div class="val" id="levelVal">1</div>
+  </div>
+</div>
+
+<!-- Game Area -->
+<div class="game-wrap">
+
+  <!-- Ball Stage -->
+  <div class="ball-stage">
+    <div class="trash-ball" id="trashBall" style="display:none">
+      <span id="ballEmoji">🗑️</span>
+      <span class="ball-lbl" id="ballLbl">垃圾</span>
+    </div>
+  </div>
+
+  <!-- Instruction -->
+  <div class="instruction" id="instruction" style="display:none">
+    <span>⬇ 投入正確的回收桶！⬇</span>
+  </div>
+
+  <!-- Bins -->
+  <div class="bins-row" id="binsRow"></div>
+
+  <!-- Eco Fact -->
+  <div class="eco-fact" id="ecoFact" style="display:none">
+    <div class="fact-tag">🌱 環保小知識</div>
+    <div class="fact-body" id="factBody"></div>
+  </div>
+</div>
+
+<!-- Start / Game-Over Overlay -->
+<div class="overlay" id="overlay">
+  <div class="ovl-box" id="ovlBox">
+    <h2>🏀 環保投籃機</h2>
+    <p>把每個垃圾投入正確的回收桶！<br>連擊加成最高 <strong style="color:var(--gold)">5×</strong>，一起守護地球！🌍</p>
+    <div class="ovl-cat-row">
+      <span title="紙類">📄</span>
+      <span title="塑膠">♻️</span>
+      <span title="玻璃">🫙</span>
+      <span title="廚餘">🌱</span>
+    </div>
+    <p style="font-size:0.8rem">鍵盤 <span class="key-badge">1</span> <span class="key-badge">2</span> <span class="key-badge">3</span> <span class="key-badge">4</span> 對應各回收桶</p>
+    <button class="start-btn" onclick="startGame()">開始遊戲！</button>
+  </div>
+</div>
+
+<!-- Level-Up Banner -->
+<div class="level-banner" id="levelBanner">⭐ LEVEL UP! ⭐</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const TOTAL_TIME = 60;
+
+const BINS = [
+  { id:'paper',   name:'紙類回收', color:'#4488ff', icon:'📄', key:'1',
+    examples:'報紙・紙盒・紙杯' },
+  { id:'plastic', name:'塑膠回收', color:'#ffdd00', icon:'♻️', key:'2',
+    examples:'寶特瓶・塑膠袋・吸管' },
+  { id:'glass',   name:'玻璃回收', color:'#00ddff', icon:'🫙', key:'3',
+    examples:'玻璃瓶・玻璃罐' },
+  { id:'organic', name:'廚餘堆肥', color:'#44ff88', icon:'🌱', key:'4',
+    examples:'果皮・菜渣・蛋殼' },
+];
+
+const ITEMS = [
+  { name:'報紙',   emoji:'📰', cat:'paper',
+    fact:'回收1噸廢紙，可以拯救17棵大樹、節省3.3立方公尺的掩埋空間！' },
+  { name:'紙箱',   emoji:'📦', cat:'paper',
+    fact:'紙箱回收再製可節省70%的水污染、35%的空氣污染！' },
+  { name:'紙杯',   emoji:'☕', cat:'paper',
+    fact:'每年全球用掉約5000億個紙杯，回收再利用是最好的選擇！' },
+  { name:'寶特瓶', emoji:'🍶', cat:'plastic',
+    fact:'一個寶特瓶需要450年才能自然分解，回收它！' },
+  { name:'塑膠袋', emoji:'🛍️', cat:'plastic',
+    fact:'每年約800萬噸塑膠流入海洋，影響超過700種海洋生物！' },
+  { name:'吸管',   emoji:'🥤', cat:'plastic',
+    fact:'全球每天使用5億支塑膠吸管！改用環保吸管或直接飲用吧！' },
+  { name:'玻璃瓶', emoji:'🍾', cat:'glass',
+    fact:'玻璃可以無限次回收，完全不失去品質，是最環保的容器之一！' },
+  { name:'玻璃罐', emoji:'🫙', cat:'glass',
+    fact:'回收玻璃比生產新玻璃節省30%的能源，減少20%空氣污染！' },
+  { name:'果皮',   emoji:'🍎', cat:'organic',
+    fact:'廚餘堆肥後能讓土壤重獲生機，提高農作物產量！' },
+  { name:'菜渣',   emoji:'🥬', cat:'organic',
+    fact:'廚餘佔家庭垃圾約37%，分類堆肥可大幅減少碳排放！' },
+  { name:'蛋殼',   emoji:'🥚', cat:'organic',
+    fact:'蛋殼富含鈣質，堆肥後能有效改善酸性土壤！' },
+  { name:'剩飯',   emoji:'🍱', cat:'organic',
+    fact:'減少廚餘從計畫採買、適量烹飪開始，珍惜每一口食物！' },
+];
+
+// ============================================================
+// LED 8×8 PATTERNS
+// Color key: . off  B blue  b darkblue  Y yellow  y darkyellow
+//            C cyan  c darkcyan  G green  g darkgreen
+//            R red   r darkred   W white  O orange  o darkorange
+//            P purple
+// ============================================================
+const CLR = {
+  '.':'#111111', ' ':'#111111',
+  'B':'#4488ff', 'b':'#1a3388',
+  'Y':'#ffdd00', 'y':'#887700',
+  'C':'#00ddff', 'c':'#006688',
+  'G':'#44ff88', 'g':'#1a6633',
+  'R':'#ff4455', 'r':'#882233',
+  'W':'#ffffff', 'w':'#888888',
+  'O':'#ff9900', 'o':'#884400',
+  'P':'#cc44ff', 'p':'#661188',
+};
+
+// Helper: 8 strings of 8 chars → 64-char pattern
+function P(...rows) { return rows.join(''); }
+
+const LED = {
+  // ── Paper bin idle (blue, paper-sheet icon)
+  paper: [
+    P('bBBBBBBb',
+      'BBBBBBBB',
+      'B.BBBB.B',
+      'B......B',
+      'B.BBBB.B',
+      'B.BBBB.B',
+      'BBBBBBBB',
+      'bBBBBBBb'),
+    P('bBBBBBBb',
+      'BBBBBBBB',
+      'B.BBBB.B',
+      'B.BBBB.B',
+      'B......B',
+      'B.BBBB.B',
+      'BBBBBBBB',
+      'bBBBBBBb'),
+    P('bBBBBBBb',
+      'BBBBBBBB',
+      'B......B',
+      'B.BBBB.B',
+      'B.BBBB.B',
+      'B......B',
+      'BBBBBBBB',
+      'bBBBBBBb'),
+  ],
+
+  // ── Plastic bin idle (yellow, bottle icon)
+  plastic: [
+    P('..YYYY..',
+      '.YYYYYY.',
+      'YYYYYYYY',
+      'Y......Y',
+      'Y......Y',
+      'Y......Y',
+      '.YYYYYY.',
+      '..YYYY..'),
+    P('..YYYY..',
+      '.YYYYYY.',
+      'YYYYYYYY',
+      'Y.y..y.Y',
+      'Y......Y',
+      'Y.y..y.Y',
+      '.YYYYYY.',
+      '..YYYY..'),
+    P('..yYYy..',
+      '.YYYYYY.',
+      'YYYYYYYY',
+      'Y......Y',
+      'Y......Y',
+      'Y......Y',
+      '.YYYYYY.',
+      '..yYYy..'),
+  ],
+
+  // ── Glass bin idle (cyan, jar icon)
+  glass: [
+    P('..CCCC..',
+      '.CCCCCC.',
+      'CC....CC',
+      'CC.WW.CC',
+      'CC....CC',
+      'CC....CC',
+      '.CCCCCC.',
+      '..CCCC..'),
+    P('..CCCC..',
+      '.CCCCCC.',
+      'CC....CC',
+      'CC....CC',
+      'CC.WW.CC',
+      'CC....CC',
+      '.CCCCCC.',
+      '..CCCC..'),
+    P('..cCCc..',
+      '.CCCCCC.',
+      'CC.WW.CC',
+      'CC....CC',
+      'CC....CC',
+      'CC.WW.CC',
+      '.CCCCCC.',
+      '..cCCc..'),
+  ],
+
+  // ── Organic bin idle (green, apple/leaf icon)
+  organic: [
+    P('...gG...',
+      '..GGGG..',
+      '.GGGGGG.',
+      'GGGGGGGG',
+      'GGGGGGGG',
+      '.GGGGGG.',
+      '..GGGG..',
+      '...GG...'),
+    P('...GG...',
+      '..GGGG..',
+      '.GGGGGG.',
+      'GGGgGGGG',
+      'GGGGgGGG',
+      '.GGGGGG.',
+      '..GGGG..',
+      '...GG...'),
+    P('...GG...',
+      '..gGGg..',
+      '.GGGGGG.',
+      'GGGGGGGG',
+      'GGGGGGGG',
+      '.GGGGGG.',
+      '..gGGg..',
+      '...GG...'),
+  ],
+
+  // ── Correct: green checkmark build-up
+  correct: [
+    P('........',
+      '.......G',
+      '......GG',
+      '.....GG.',
+      'G...GG..',
+      'GG.GG...',
+      'GGG.....',
+      '........'),
+    P('........',
+      '.....GGG',
+      '....GG..',
+      'G..GG...',
+      'GG.GG...',
+      'GGGGG...',
+      '.GGG....',
+      '..G.....'),
+    P('.GGGGGG.',
+      'GGGGGGGG',
+      'GG....GG',
+      'G......G',
+      'G......G',
+      'GG....GG',
+      'GGGGGGGG',
+      '.GGGGGG.'),
+  ],
+
+  // ── Wrong: red X flash
+  wrong: [
+    P('R......R',
+      '.R....R.',
+      '..R..R..',
+      '...RR...',
+      '...RR...',
+      '..R..R..',
+      '.R....R.',
+      'R......R'),
+    P('RR....RR',
+      '.RR..RR.',
+      '..RRRR..',
+      '...RR...',
+      '...RR...',
+      '..RRRR..',
+      '.RR..RR.',
+      'RR....RR'),
+    P('RRRRRRRR',
+      'RRRRRRRR',
+      'RR....RR',
+      'R.RRRR.R',
+      'R.RRRR.R',
+      'RR....RR',
+      'RRRRRRRR',
+      'RRRRRRRR'),
+  ],
+
+  // ── Celebrate: star shower (yellow/white sparkle)
+  celebrate: [
+    P('Y.Y.Y.Y.',
+      '.Y.Y.Y.Y',
+      'Y.Y.Y.Y.',
+      '.Y.Y.Y.Y',
+      'Y.Y.Y.Y.',
+      '.Y.Y.Y.Y',
+      'Y.Y.Y.Y.',
+      '.Y.Y.Y.Y'),
+    P('.W.Y.W.Y',
+      'Y.W.Y.W.',
+      '.Y.W.Y.W',
+      'W.Y.W.Y.',
+      '.W.Y.W.Y',
+      'Y.W.Y.W.',
+      '.Y.W.Y.W',
+      'W.Y.W.Y.'),
+    P('...W....',
+      '..W.W...',
+      '.W...W..',
+      'W.....W.',
+      '.W...W..',
+      '..W.W...',
+      '...W....',
+      '........'),
+  ],
+
+  // ── Level-Up: rainbow sweep
+  levelup: [
+    P('RRRRRRRR',
+      'rrrrrrrr',
+      '........',
+      '........',
+      '........',
+      '........',
+      '........',
+      '........'),
+    P('OOOOOOOO',
+      'RRRRRRRR',
+      'rrrrrrrr',
+      '........',
+      '........',
+      '........',
+      '........',
+      '........'),
+    P('YYYYYYYY',
+      'OOOOOOOO',
+      'RRRRRRRR',
+      'rrrrrrrr',
+      '........',
+      '........',
+      '........',
+      '........'),
+    P('GGGGGGGG',
+      'YYYYYYYY',
+      'OOOOOOOO',
+      'RRRRRRRR',
+      'rrrrrrrr',
+      '........',
+      '........',
+      '........'),
+    P('BBBBBBBB',
+      'GGGGGGGG',
+      'YYYYYYYY',
+      'OOOOOOOO',
+      'RRRRRRRR',
+      'rrrrrrrr',
+      '........',
+      '........'),
+    P('PPPPPPPP',
+      'BBBBBBBB',
+      'GGGGGGGG',
+      'YYYYYYYY',
+      'OOOOOOOO',
+      'RRRRRRRR',
+      'rrrrrrrr',
+      '........'),
+    P('........',
+      'PPPPPPPP',
+      'BBBBBBBB',
+      'GGGGGGGG',
+      'YYYYYYYY',
+      'OOOOOOOO',
+      'RRRRRRRR',
+      'rrrrrrrr'),
+    P('........',
+      '........',
+      'PPPPPPPP',
+      'BBBBBBBB',
+      'GGGGGGGG',
+      'YYYYYYYY',
+      'OOOOOOOO',
+      'RRRRRRRR'),
+  ],
+
+  // ── Idle waiting (orange basketball bounce)
+  idle: [
+    P('...OO...',
+      '..OOOO..',
+      '.OOOOOO.',
+      'OOOOOOOO',
+      'OOOOOOOO',
+      '.OOOOOO.',
+      '..OOOO..',
+      '...OO...'),
+    P('........',
+      '...ooo..',
+      '..OOOO..',
+      '.OOOOOO.',
+      '.OOOOOO.',
+      '..OOOO..',
+      '...ooo..',
+      '........'),
+  ],
+};
+
+// ============================================================
+// DRAW LED MATRIX
+// ============================================================
+function drawMatrix(el, pattern) {
+  const cells = el.querySelectorAll('.led');
+  for (let i = 0; i < 64; i++) {
+    const ch = pattern[i] || '.';
+    const col = CLR[ch] || '#111';
+    cells[i].style.backgroundColor = col;
+    cells[i].style.boxShadow = (col !== '#111111' && col !== '#111')
+      ? `0 0 5px ${col}88, 0 0 10px ${col}44` : 'none';
+  }
+}
+
+// ============================================================
+// WEB AUDIO API – SOUND ENGINE
+// ============================================================
+let audioCtx = null;
+let soundOn = true;
+
+function ac() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function toggleSound() {
+  soundOn = !soundOn;
+  document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇';
+}
+function tone(freq, type, dur, vol = 0.3, delay = 0) {
+  if (!soundOn) return;
+  const ctx = ac();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+  gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + dur);
+  osc.start(ctx.currentTime + delay);
+  osc.stop(ctx.currentTime + delay + dur + 0.01);
+}
+function noiseSwish(dur = 0.25) {
+  if (!soundOn) return;
+  const ctx = ac();
+  const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * (1 - i/d.length);
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const flt = ctx.createBiquadFilter(); flt.type = 'bandpass';
+  flt.frequency.setValueAtTime(3500, ctx.currentTime);
+  flt.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + dur);
+  flt.Q.value = 2;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.45, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+  src.connect(flt); flt.connect(gain); gain.connect(ctx.destination);
+  src.start(); src.stop(ctx.currentTime + dur + 0.01);
+}
+
+const SFX = {
+  bounce()  { tone(320,'sine',0.12,0.22); tone(160,'sine',0.1,0.18,0.1); },
+  throw()   { noiseSwish(0.2); tone(500,'sine',0.08,0.15); },
+  correct() {
+    [523,659,784,1047].forEach((f,i) => tone(f,'sine',0.22,0.28,i*0.09));
+  },
+  wrong()   {
+    tone(250,'sawtooth',0.18,0.4); tone(160,'sawtooth',0.2,0.35,0.16);
+  },
+  combo()   { tone(880,'sine',0.12,0.22); tone(1100,'sine',0.12,0.2,0.1); },
+  streak5() { [784,988,1175].forEach((f,i)=>tone(f,'square',0.15,0.25,i*0.1)); },
+  levelup() {
+    [523,659,784,1047,1319].forEach((f,i) => tone(f,'square',0.18,0.2,i*0.1));
+    [659,784,988,1319].forEach((f,i) => tone(f,'sine',0.12,0.15,i*0.1+0.05));
+  },
+  tick()    { tone(900,'square',0.04,0.12); },
+  gameover(){
+    [400,300,220,150].forEach((f,i) => tone(f,'sawtooth',0.28,0.32,i*0.22));
+  },
+};
+
+// ============================================================
+// PARTICLE SYSTEM
+// ============================================================
+const canvas = document.getElementById('pCanvas');
+const pCtx = canvas.getContext('2d');
+let particles = [];
+(function resizeC() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+})();
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+function spawnParticles(x, y, color, count = 22) {
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const s = Math.random() * 5 + 2;
+    particles.push({
+      x, y,
+      vx: Math.cos(a) * s, vy: Math.sin(a) * s - 3,
+      color, size: Math.random()*6+3,
+      life: 1, decay: Math.random()*0.022+0.012,
+    });
+  }
+}
+function drawParticles() {
+  pCtx.clearRect(0,0,canvas.width,canvas.height);
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.22;
+    p.life -= p.decay;
+    pCtx.globalAlpha = Math.max(p.life, 0);
+    pCtx.fillStyle = p.color;
+    pCtx.beginPath();
+    pCtx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    pCtx.fill();
+  });
+  pCtx.globalAlpha = 1;
+}
+function showScorePopup(x, y, pts) {
+  const el = document.createElement('div');
+  el.className = 'score-popup';
+  el.textContent = '+' + pts;
+  el.style.left = (x - 20) + 'px';
+  el.style.top  = (y - 20) + 'px';
+  el.style.color = pts >= 30 ? '#f9c74f' : '#00ff88';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+// ============================================================
+// GAME STATE
+// ============================================================
+let state      = 'idle';   // idle | playing | processing
+let score      = 0;
+let timeLeft   = TOTAL_TIME;
+let streak     = 0;
+let maxStreak  = 0;
+let level      = 1;
+let correct    = 0;
+let currentItem = null;
+let timerInt   = null;
+let rafId      = null;
+let lastAnim   = 0;
+let processing = false;
+
+const binAnim = {};  // { id: { frame, mode } }
+
+// ============================================================
+// BUILD DOM – BINS
+// ============================================================
+function setupBins() {
+  const row = document.getElementById('binsRow');
+  row.innerHTML = '';
+  BINS.forEach(bin => {
+    const card = document.createElement('div');
+    card.className = 'bin-card';
+    card.id = 'bin-' + bin.id;
+    card.style.borderColor = bin.color + '55';
+    card.onclick = () => handleClick(bin.id);
+    card.innerHTML = `
+      <div class="bin-header" style="color:${bin.color}">${bin.icon} ${bin.name}</div>
+      <div class="bin-led-area">
+        <div class="led-matrix" id="led-${bin.id}">
+          ${Array(64).fill('<div class="led"></div>').join('')}
+        </div>
+      </div>
+      <div class="bin-footer">
+        <span style="color:${bin.color}55;font-size:0.68rem">${bin.examples}</span><br>
+        <span class="key-badge">${bin.key}</span>
+      </div>`;
+    row.appendChild(card);
+    binAnim[bin.id] = { frame: 0, mode: 'idle' };
+  });
+}
+
+// ============================================================
+// GAME FLOW
+// ============================================================
+function startGame() {
+  document.getElementById('overlay').style.display = 'none';
+  score = 0; timeLeft = TOTAL_TIME; streak = 0;
+  maxStreak = 0; level = 1; correct = 0;
+  processing = false; state = 'playing';
+  BINS.forEach(b => { binAnim[b.id] = { frame:0, mode:'idle' }; });
+  updateHUD();
+  nextItem();
+  startTimer();
+  // Unlock audio ctx on user gesture
+  try { ac(); } catch(e) {}
+}
+
+function startTimer() {
+  clearInterval(timerInt);
+  timerInt = setInterval(() => {
+    if (state !== 'playing') return;
+    timeLeft--;
+    updateHUD();
+    if (timeLeft <= 10) SFX.tick();
+    if (timeLeft <= 0) { clearInterval(timerInt); gameOver(); }
+  }, 1000);
+}
+
+function nextItem() {
+  currentItem = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+  const ball = document.getElementById('trashBall');
+  const col = catColor(currentItem.cat);
+  ball.style.display = 'flex';
+  ball.style.backgroundColor = col + '33';
+  ball.style.border = `3px solid ${col}`;
+  ball.style.color = col;
+  ball.style.boxShadow = `0 0 22px ${col}66`;
+  ball.classList.remove('throw-anim');
+  document.getElementById('ballEmoji').textContent = currentItem.emoji;
+  document.getElementById('ballLbl').textContent   = currentItem.name;
+  document.getElementById('instruction').style.display = 'block';
+  document.getElementById('ecoFact').style.display = 'none';
+  BINS.forEach(b => { binAnim[b.id].mode = 'idle'; });
+  SFX.bounce();
+}
+
+function handleClick(binId) {
+  if (state !== 'playing' || !currentItem || processing) return;
+  processing = true;
+  const bin = BINS.find(b => b.id === binId);
+  const card = document.getElementById('bin-' + binId);
+  const rect = card.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top  + rect.height/2;
+
+  SFX.throw();
+  document.getElementById('trashBall').classList.add('throw-anim');
+
+  setTimeout(() => {
+    if (binId === currentItem.cat) onCorrect(bin, card, cx, cy);
+    else                           onWrong(bin, card, cx, cy);
+  }, 380);
+}
+
+function onCorrect(bin, card, cx, cy) {
+  streak++;
+  maxStreak = Math.max(maxStreak, streak);
+  correct++;
+  const mult   = Math.min(streak, 5);
+  const pts    = 10 * mult;
+  score += pts;
+  card.classList.add('correct');
+  binAnim[bin.id] = { frame:0, mode:'correct' };
+  spawnParticles(cx, cy, bin.color, 28);
+  showScorePopup(cx, cy, pts);
+  SFX.correct();
+  if (streak === 5) SFX.streak5();
+  else if (streak >= 3) SFX.combo();
+  document.getElementById('factBody').textContent = currentItem.fact;
+  document.getElementById('ecoFact').style.display = 'block';
+  if (correct % 5 === 0) { level++; showLevelUp(); }
+  updateHUD();
+  setTimeout(() => {
+    card.classList.remove('correct');
+    processing = false;
+    if (state === 'playing') nextItem();
+  }, 1500);
+}
+
+function onWrong(bin, card, cx, cy) {
+  streak = 0;
+  card.classList.add('wrong');
+  binAnim[bin.id] = { frame:0, mode:'wrong' };
+  spawnParticles(cx, cy, '#ff4455', 14);
+  SFX.wrong();
+  const right = BINS.find(b => b.id === currentItem.cat);
+  document.getElementById('factBody').textContent =
+    `❌ ${currentItem.name} 應投入「${right.name}」！\n💡 ${currentItem.fact}`;
+  document.getElementById('ecoFact').style.display = 'block';
+  updateHUD();
+  setTimeout(() => {
+    card.classList.remove('wrong');
+    binAnim[bin.id].mode = 'idle';
+    processing = false;
+    if (state === 'playing') nextItem();
+  }, 1800);
+}
+
+function gameOver() {
+  state = 'gameover';
+  processing = false;
+  currentItem = null;
+  SFX.gameover();
+  document.getElementById('trashBall').style.display = 'none';
+  document.getElementById('instruction').style.display = 'none';
+  const box = document.getElementById('ovlBox');
+  const grade = score >= 300 ? '♻️ 環保達人！' : score >= 150 ? '🌿 分類高手！' : '🌱 繼續加油！';
+  box.innerHTML = `
+    <h2>⏰ 時間到！</h2>
+    <p style="font-size:0.88rem;margin-bottom:8px">${grade}</p>
+    <p style="font-size:0.85rem;margin-bottom:4px">最終分數</p>
+    <p style="font-size:3rem;font-weight:900;color:var(--accent);font-family:'Chakra Petch',monospace;line-height:1;margin-bottom:16px">${score}</p>
+    <p style="font-size:0.88rem;color:var(--dim);line-height:1.8">
+      正確分類 <strong style="color:var(--gold)">${correct}</strong> 項
+      最高連擊 <strong style="color:#ff9900">${maxStreak}×</strong>
+      關卡達到 <strong style="color:var(--accent2)">Level ${level}</strong>
+    </p>
+    <p style="margin:12px 0;font-size:0.8rem;color:var(--dim)">
+      🌍 每次正確分類都是愛護地球的行動！
+    </p>
+    <button class="start-btn" onclick="startGame()">再玩一次！</button>`;
+  document.getElementById('overlay').style.display = 'flex';
+}
+
+function showLevelUp() {
+  SFX.levelup();
+  const banner = document.getElementById('levelBanner');
+  banner.textContent = `⭐ LEVEL ${level} ⭐`;
+  banner.classList.add('show');
+  BINS.forEach(b => { binAnim[b.id] = { frame:0, mode:'celebrate' }; });
+  setTimeout(() => {
+    banner.classList.remove('show');
+    BINS.forEach(b => { binAnim[b.id].mode = 'idle'; });
+  }, 2200);
+}
+
+function updateHUD() {
+  document.getElementById('scoreVal').textContent  = score;
+  document.getElementById('timerVal').textContent  = timeLeft;
+  document.getElementById('streakVal').textContent = Math.min(streak,5) + '×';
+  document.getElementById('levelVal').textContent  = level;
+  const pct = timeLeft / TOTAL_TIME * 100;
+  const bar = document.getElementById('timerBar');
+  bar.style.width = pct + '%';
+  bar.style.background = pct > 50
+    ? 'linear-gradient(90deg,#00ff88,#4cc9f0)'
+    : pct > 25
+      ? 'linear-gradient(90deg,#ff9900,#ffdd00)'
+      : 'linear-gradient(90deg,#ff4455,#ff9900)';
+}
+
+function catColor(cat) {
+  return { paper:'#4488ff', plastic:'#ffdd00', glass:'#00ddff', organic:'#44ff88' }[cat] || '#888';
+}
+
+// ============================================================
+// ANIMATION LOOP
+// ============================================================
+const FRAME_MS = 480;   // ms per LED frame
+
+function updateLEDs() {
+  BINS.forEach(bin => {
+    const s   = binAnim[bin.id];
+    const el  = document.getElementById('led-' + bin.id);
+    if (!el) return;
+
+    let pats, maxF;
+    switch (s.mode) {
+      case 'correct':   pats = LED.correct;          maxF = pats.length;       break;
+      case 'wrong':     pats = LED.wrong;             maxF = pats.length * 3;   break;
+      case 'celebrate': pats = LED.celebrate;         maxF = Infinity;          break;
+      case 'levelup':   pats = LED.levelup;           maxF = pats.length * 2;   break;
+      default:          pats = LED[bin.id] || LED.idle; maxF = Infinity;        break;
+    }
+
+    if (s.frame >= maxF) {
+      s.mode  = 'idle';
+      s.frame = 0;
+      pats    = LED[bin.id] || LED.idle;
+    }
+
+    drawMatrix(el, pats[s.frame % pats.length]);
+    s.frame++;
+  });
+}
+
+function loop(ts) {
+  drawParticles();
+  if (ts - lastAnim >= FRAME_MS) { lastAnim = ts; updateLEDs(); }
+  rafId = requestAnimationFrame(loop);
+}
+
+// ============================================================
+// KEYBOARD
+// ============================================================
+document.addEventListener('keydown', e => {
+  if (state !== 'playing') return;
+  const map = { '1':'paper','2':'plastic','3':'glass','4':'organic' };
+  if (map[e.key]) handleClick(map[e.key]);
+});
+
+// ============================================================
+// INIT
+// ============================================================
+setupBins();
+BINS.forEach(b => { binAnim[b.id] = { frame:0, mode:'idle' }; });
+rafId = requestAnimationFrame(loop);
+document.getElementById('overlay').style.display = 'flex';
+</script>
+</body>
+</html>
