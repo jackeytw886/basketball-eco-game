@@ -1,0 +1,35 @@
+{
+  "project_id": "P016",
+  "github_repository_id": 1163852988,
+  "title_en": "Eco Basketball Legacy",
+  "title_zh": "環保投籃・第一版",
+  "category": "install",
+  "topics": [
+    "recycling",
+    "legacy"
+  ],
+  "repository_full_name": "jackeytw886/basketball-eco-game",
+  "repository_url": "https://github.com/jackeytw886/basketball-eco-game",
+  "default_branch": "main",
+  "visibility": "public",
+  "aliases": [],
+  "suggested_name": "install-eco-basketball-legacy",
+  "repository_status": "connected",
+  "content_state": "source-present",
+  "lifecycle": "unknown",
+  "pages_enabled": true,
+  "deployment_url": "https://jackeytw886.github.io/basketball-eco-game",
+  "event_year": null,
+  "entry_paths": [
+    "index.html"
+  ],
+  "related_project_ids": [
+    "P004"
+  ],
+  "handoff_path": "HANDOFF.md",
+  "verification_source": "github-tree-and-readme",
+  "verified_at": "2026-10-17T20:41:56+08:00",
+  "source_baseline_sha": "64f0256d809b1a99a8ef04c071d9038614e1e263",
+  "last_runtime_verified_sha": null,
+  "naming_status": "preserved-for-pages"
+}
